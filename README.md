@@ -2,14 +2,14 @@
 
 Two small projects for the FORESE tech team recruitment.
 
-1. **Student Records API (backend)**: a REST API with full CRUD, validation and error handling. Built with Python, Flask and SQLite. It lives in `backend/`.
-2. **Student Profile Card (frontend)**: a responsive profile card with login, create, edit and delete, plus an optional dashboard that lists all students from the API. It lives in `frontend/`.
+1. **Student Records API (backend):** a REST API with full CRUD, validation and error handling, built with Python, Flask and SQLite. Files: `app.py`, `test_api.py`, `requirements.txt`.
+2. **Student Profile Card (frontend):** a responsive profile card with login, create, edit and delete. Files: `index.html`, plus an optional `dashboard.html` that lists all students from the API.
 
 ## 1. Student Records API
 
 Each student has a name, roll number, username, department and year.
 
-Open a terminal in the `backend` folder (needs Python 3.8 or newer).
+Download this repo, open a terminal in its folder (needs Python 3.8 or newer), and run:
 
 macOS / Linux:
 ```
@@ -37,18 +37,18 @@ The API runs at http://127.0.0.1:5001. To check everything works, run `python te
 | PUT | /students/<id> | Update a student |
 | DELETE | /students/<id> | Delete a student |
 
-Validation: name is 2 to 100 letters; roll number is exactly 13 digits; username is a year from 2023 to 2026, a 2-letter department code and 4 digits; year is 1 to 4. Roll numbers and usernames must be unique. Errors come back as JSON with the right status code (400, 404, 405, 409, 500). See `backend/README.md` for curl examples.
+Validation: name is 2 to 100 letters; roll number is exactly 13 digits; username is a year from 2023 to 2026, a 2-letter department code and 4 digits; year is 1 to 4. Roll numbers and usernames must be unique. Errors come back as JSON with the right status code (400, 404, 405, 409, 500).
 
 ## 2. Student Profile Card
 
-No install needed. Open `frontend/index.html` in any browser.
+No install needed. Open `index.html` in any browser.
 
 - Log in with your username to see only your own profile, or create a new profile.
 - Edit your details (photo, department, year, skills, social links) or delete your profile.
 - Works on phones and laptops.
 - Profiles are saved in the browser's local storage.
 
-Dashboard (optional): start the API first, then open `frontend/dashboard.html`. It shows all students from the API with stats, search, filters, and add, edit and delete.
+Dashboard (optional): start the API first, then open `dashboard.html`. It shows all students from the API with stats, search, filters, and add, edit and delete.
 
 ## Tech
 
