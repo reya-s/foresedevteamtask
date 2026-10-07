@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Karla:wght@400;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  /* ===== CUSTOMIZE HERE: change these values to restyle the whole page ===== */
+  :root {
+    --paper: #eceff2;       /* page background */
+    --ink: #14181c;         /* text, borders, shadows */
+    --muted: #58636d;       /* secondary text */
+    --card: #ffffff;        /* card background */
+    --line: #d3d9de;        /* light borders */
+    --accent: #3f5870;      /* links, initials, focus ring (a calm slate blue) */
+    --accent-soft: #dbe3ea; /* photo placeholder background */
+    --error: #b3261e;
+    --heading-font: Sora, system-ui, sans-serif;
+    --body-font: Karla, system-ui, sans-serif;
+  }
+  /* ======================================================================== */
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 32px 24px;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body-font);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .page { width: 100%; max-width: 720px; display: flex; flex-direction: column; gap: 24px; }
+
+  button, select, input[type="text"], input[type="url"] { font: inherit; }
+
+  button {
+    font-weight: 600;
+    padding: 8px 18px;
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    background: var(--ink);
+    color: #fff;
+    cursor: pointer;
+  }
+  button.secondary { background: var(--card); color: var(--ink); }
+  button.danger { background: var(--card); color: var(--error); border-color: var(--error); }
+  button.block { width: 100%; padding: 10px 18px; }
+  button:hover { opacity: 0.88; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  h2 { margin: 0 0 8px; font-size: 16px; font-weight: 600; color: var(--muted); }
+
+  /* ---------- Welcome / login ---------- */
+  .welcome {
+    width: 100%;
+    max-width: 440px;
+    margin: 6vh auto 0;
+    padding: 28px;
+    background: var(--card);
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+    box-shadow: 8px 8px 0 var(--ink);
+  }
+  .welcome h1 { margin: 0 0 6px; font-family: var(--heading-font); font-size: 28px; letter-spacing: -0.01em; }
+  .welcome .lead { margin: 0 0 20px; color: var(--muted); }
+  .welcome .or { margin: 18px 0 8px; text-align: center; color: var(--muted); }
+
+  /* ---------- Logged-in view ---------- */
+  .toolbar { display: flex; justify-content: flex-end; margin-bottom: 20px; }
+
+  .card {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    background: var(--card);
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+    box-shadow: 8px 8px 0 var(--ink);
+    overflow: hidden;
+  }
+
+  .photo {
+    display: grid;
+    place-items: center;
+    min-height: 260px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-family: var(--heading-font);
+    font-size: 72px;
+    font-weight: 700;
+    border-right: 1.5px solid var(--ink);
+    overflow: hidden;
+  }
+  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .details { padding: 28px; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+
+  .details h1 {
+    margin: 0;
+    font-family: var(--heading-font);
+    font-size: 30px;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+  }
+
+  dl.facts { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; }
+  dl.facts dt { color: var(--muted); }
+  dl.facts dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+
+  ul.chips { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
+  ul.chips li {
+    padding: 2px 10px;
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  ul.chips li.empty, ul.links li.empty { border: 0; padding: 0; font-weight: 400; color: var(--muted); font-size: 16px; }
+
+  ul.links { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px 20px; }
+  ul.links a { color: var(--accent); font-weight: 600; text-underline-offset: 3px; }
+
+  .actions { margin-top: auto; display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* ---------- Forms (login + dialog) ---------- */
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-weight: 600; margin-bottom: 4px; }
+  .welcome input[type="text"], dialog input[type="text"], dialog input[type="url"], dialog select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1.5px solid var(--line);
+    border-radius: 4px;
+    background: #fff;
+    color: var(--ink);
+  }
+  .welcome input[type="text"] { border-color: var(--ink); }
+  input::placeholder { color: #8b959e; }
+  input[type="file"] { max-width: 100%; font: inherit; }
+  .hint { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
+  .error { margin: 4px 0 0; font-size: 14px; color: var(--error); }
+  .field.invalid input, .field.invalid select { border-color: var(--error); }
+
+  dialog {
+    width: min(480px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    padding: 24px;
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+    box-shadow: 8px 8px 0 var(--ink);
+    color: var(--ink);
+    background: var(--card);
+    overflow-y: auto;
+  }
+  dialog::backdrop { background: rgba(20, 24, 28, 0.55); }
+  dialog h2 { font-family: var(--heading-font); font-size: 20px; color: var(--ink); margin-bottom: 16px; }
+  .dialog-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  /* ---------- Small screens ---------- */
+  @media (max-width: 600px) {
+    body { padding: 16px; }
+    .welcome { margin-top: 3vh; padding: 22px; box-shadow: 6px 6px 0 var(--ink); }
+    .card { grid-template-columns: 1fr; box-shadow: 6px 6px 0 var(--ink); }
+    .photo { min-height: 220px; border-right: 0; border-bottom: 1.5px solid var(--ink); }
+    .details { padding: 20px; }
+    .details h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<main class="page">
+
+  <!-- Shown when nobody is logged in -->
+  <section class="welcome" id="welcome" aria-labelledby="welcomeTitle">
+    <h1 id="welcomeTitle">Student profile</h1>
+    <p class="lead">Log in with your username to view, edit or delete your profile.</p>
+
+    <form id="loginForm" novalidate>
+      <div class="field" id="f-login">
+        <label for="loginUsername">Username</label>
+        <input type="text" id="loginUsername" maxlength="10" placeholder="2025csxxxx" autocomplete="off" autocapitalize="none" spellcheck="false">
+        <p class="error" id="loginError" role="alert"></p>
+      </div>
+      <button type="submit" class="block">Log in</button>
+    </form>
+
+    <p class="or">New here?</p>
+    <button type="button" class="secondary block" id="createBtn">Create new profile</button>
+  </section>
+
+  <!-- Shown after logging in: only your own profile -->
+  <div id="profileView" hidden>
+    <div class="toolbar">
+      <button type="button" class="secondary" id="logoutBtn">Log out</button>
+    </div>
+
+    <article class="card" aria-labelledby="name">
+      <div class="photo" id="photo"></div>
+
+      <div class="details">
+        <h1 id="name"></h1>
+
+        <dl class="facts">
+          <dt>Roll number</dt><dd id="rollNumber"></dd>
+          <dt>Department</dt><dd id="department"></dd>
+          <dt>Year</dt><dd id="year"></dd>
+        </dl>
+
+        <section aria-labelledby="skills-title">
+          <h2 id="skills-title">Skills</h2>
+          <ul class="chips" id="skills"></ul>
+        </section>
+
+        <section aria-labelledby="links-title">
+          <h2 id="links-title">Find me on</h2>
+          <ul class="links" id="links"></ul>
+        </section>
+
+        <div class="actions">
+          <button type="button" id="editBtn">Edit profile</button>
+          <button type="button" class="danger" id="deleteBtn">Delete profile</button>
+        </div>
+      </div>
+    </article>
+  </div>
+
+</main>
+
+<dialog id="editDialog" aria-labelledby="dialogTitle">
+  <h2 id="dialogTitle">Create profile</h2>
+
+  <form id="editForm" novalidate>
+    <div class="field" id="f-username">
+      <label for="in-username">Username</label>
+      <input type="text" id="in-username" maxlength="10" placeholder="2025csxxxx" autocomplete="off" autocapitalize="none" spellcheck="false">
+      <p class="hint">This is your login ID. Year (2023 to 2026), 2-letter department code, then 4 digits.</p>
+      <p class="error" id="e-username"></p>
+    </div>
+
+    <div class="field" id="f-name">
+      <label for="in-name">Name</label>
+      <input type="text" id="in-name" maxlength="60" autocomplete="off">
+      <p class="error" id="e-name"></p>
+    </div>
+
+    <div class="field" id="f-rollNumber">
+      <label for="in-rollNumber">Roll number</label>
+      <input type="text" id="in-rollNumber" inputmode="numeric" maxlength="13" placeholder="212725050xxxx" autocomplete="off">
+      <p class="hint">13 digits</p>
+      <p class="error" id="e-rollNumber"></p>
+    </div>
+
+    <div class="field">
+      <label for="in-photo">Photo</label>
+      <input type="file" id="in-photo" accept="image/*">
+      <p class="hint" id="photoStatus"></p>
+      <button type="button" class="secondary" id="removePhoto" style="margin-top:6px">Remove photo</button>
+    </div>
+
+    <div class="field" id="f-department">
+      <label for="in-department">Department</label>
+      <select id="in-department"></select>
+      <p class="error" id="e-department"></p>
+    </div>
+
+    <div class="field" id="f-year">
+      <label for="in-year">Year</label>
+      <select id="in-year">
+        <option value="1">1st year</option>
+        <option value="2">2nd year</option>
+        <option value="3">3rd year</option>
+        <option value="4">4th year</option>
+      </select>
+      <p class="error" id="e-year"></p>
+    </div>
+
+    <div class="field" id="f-skills">
+      <label for="in-skills">Skills</label>
+      <input type="text" id="in-skills">
+      <p class="hint">Separate with commas, e.g. C, Python, HTML</p>
+      <p class="error" id="e-skills"></p>
+    </div>
+
+    <div class="field" id="f-github">
+      <label for="in-github">GitHub link</label>
+      <input type="url" id="in-github" placeholder="https://github.com/username">
+      <p class="error" id="e-github"></p>
+    </div>
+
+    <div class="field" id="f-linkedin">
+      <label for="in-linkedin">LinkedIn link</label>
+      <input type="url" id="in-linkedin" placeholder="https://linkedin.com/in/username">
+      <p class="error" id="e-linkedin"></p>
+    </div>
+
+    <div class="field" id="f-instagram">
+      <label for="in-instagram">Instagram link</label>
+      <input type="url" id="in-instagram" placeholder="https://instagram.com/username">
+      <p class="error" id="e-instagram"></p>
+    </div>
+
+    <div class="dialog-actions">
+      <button type="button" class="secondary" id="cancelBtn">Cancel</button>
+      <button type="submit" id="saveBtn">Save profile</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  // ---------------------------------------------------------------
+  // 1. Settings and data
+  // ---------------------------------------------------------------
+  // The department dropdown is built from this list. Add or remove names here.
+  const DEPARTMENTS = [
+    "Computer Science and Engineering",
+    "Electrical and Electronics Engineering",
+    "Electronics and Communication Engineering",
+    "Artificial Intelligence and Data Science",
+    "Information Technology",
+    "Chemical Engineering",
+    "Mechanical Engineering",
+    "Biotechnology"
+  ];
+
+  // Username = year (2023-2026) + 2-letter department code + 4 digits
+  const USERNAME_RE = /^(2023|2024|2025|2026)[a-z]{2}\d{4}$/;
+
+  const STORAGE_KEY = "studentProfilesV2";       // all profiles (saved in this browser)
+  const SESSION_KEY = "studentProfileSession";   // who is logged in (cleared when the tab closes)
+
+  const blankProfile = {
+    name: "", rollNumber: "", department: "", year: 1,
+    skills: [], photo: "", github: "", linkedin: "", instagram: ""
+  };
+
+  function newId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+
+  function loadProfiles() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if (Array.isArray(saved)) return saved.filter((p) => p && p.id && p.username);
+    } catch (err) { /* start empty */ }
+    return [];
+  }
+
+  let profiles = loadProfiles();
+  let loggedInId = null;
+  try { loggedInId = sessionStorage.getItem(SESSION_KEY); } catch (err) { /* ignore */ }
+  if (!profiles.some((p) => p.id === loggedInId)) loggedInId = null;
+
+  let editingId = null;   // null = creating a new profile, otherwise the id being edited
+  let pendingPhoto = "";  // photo picked in the dialog, only kept when you click Save
+
+  function currentProfile() {
+    return profiles.find((p) => p.id === loggedInId) || null;
+  }
+
+  function persist() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
+      return true;
+    } catch (err) {
+      alert("Could not save. The browser storage may be full. Try a smaller photo.");
+      return false;
+    }
+  }
+
+  // Fill the department dropdown
+  const deptSelect = $("in-department");
+  deptSelect.append(new Option("Select department", ""));
+  DEPARTMENTS.forEach((d) => deptSelect.append(new Option(d, d)));
+
+  // ---------------------------------------------------------------
+  // 2. Show the login screen or the logged-in profile
+  // ---------------------------------------------------------------
+  function initials(name) {
+    return name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+  }
+
+  function render() {
+    const p = currentProfile();
+    $("welcome").hidden = !!p;
+    $("profileView").hidden = !p;
+    if (!p) return;
+
+    $("name").textContent = p.name;
+    $("rollNumber").textContent = p.rollNumber;
+    $("department").textContent = p.department;
+    $("year").textContent = "Year " + p.year;
+
+    // Photo, or initials if there is no photo
+    const photoBox = $("photo");
+    photoBox.replaceChildren();
+    if (p.photo) {
+      const img = document.createElement("img");
+      img.src = p.photo;
+      img.alt = "Photo of " + p.name;
+      photoBox.append(img);
+      photoBox.removeAttribute("role");
+      photoBox.removeAttribute("aria-label");
+    } else {
+      photoBox.textContent = initials(p.name);
+      photoBox.setAttribute("role", "img");
+      photoBox.setAttribute("aria-label", "Initials of " + p.name);
+    }
+
+    // Skills
+    const skillsList = $("skills");
+    skillsList.replaceChildren();
+    if (!p.skills.length) {
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.textContent = "No skills added yet.";
+      skillsList.append(li);
+    }
+    p.skills.forEach((skill) => {
+      const li = document.createElement("li");
+      li.textContent = skill;
+      skillsList.append(li);
+    });
+
+    // Social links (only the ones that are filled in)
+    const linksList = $("links");
+    linksList.replaceChildren();
+    [["github", "GitHub"], ["linkedin", "LinkedIn"], ["instagram", "Instagram"]].forEach(([key, label]) => {
+      if (!p[key]) return;
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.href = p[key];
+      a.textContent = label;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      li.append(a);
+      linksList.append(li);
+    });
+    if (!linksList.children.length) {
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.textContent = "No links added yet.";
+      linksList.append(li);
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // 3. Log in and log out
+  // ---------------------------------------------------------------
+  function logIn(id) {
+    loggedInId = id;
+    try { sessionStorage.setItem(SESSION_KEY, id); } catch (err) { /* ignore */ }
+    $("loginUsername").value = "";
+    $("loginError").textContent = "";
+    $("f-login").classList.remove("invalid");
+    render();
+    $("editBtn").focus();
+  }
+
+  function logOut() {
+    loggedInId = null;
+    try { sessionStorage.removeItem(SESSION_KEY); } catch (err) { /* ignore */ }
+    render();
+    $("loginUsername").focus();
+  }
+
+  $("loginForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const username = $("loginUsername").value.trim().toLowerCase();
+    const match = profiles.find((p) => p.username === username);
+
+    if (!username) {
+      $("loginError").textContent = "Enter your username.";
+      $("f-login").classList.add("invalid");
+    } else if (!match) {
+      $("loginError").textContent = "No profile found for that username. Check it, or create a new profile.";
+      $("f-login").classList.add("invalid");
+    } else {
+      logIn(match.id);
+    }
+  });
+
+  $("logoutBtn").addEventListener("click", logOut);
+
+  // ---------------------------------------------------------------
+  // 4. Create / Edit dialog
+  // ---------------------------------------------------------------
+  const dialog = $("editDialog");
+  const form = $("editForm");
+  const fieldNames = ["username", "name", "rollNumber", "department", "year", "skills", "github", "linkedin", "instagram"];
+
+  function clearErrors() {
+    fieldNames.forEach((f) => {
+      $("e-" + f).textContent = "";
+      $("f-" + f).classList.remove("invalid");
+    });
+  }
+
+  function setError(field, message) {
+    $("e-" + field).textContent = message;
+    $("f-" + field).classList.add("invalid");
+  }
+
+  // profile = null means "create a new one", otherwise edit that profile
+  function openEditor(profile) {
+    clearErrors();
+    const p = profile || blankProfile;
+    editingId = profile ? profile.id : null;
+    $("dialogTitle").textContent = profile ? "Edit profile" : "Create profile";
+
+    // The username is the login ID, so it is only asked for when creating
+    $("f-username").hidden = !!profile;
+    $("in-username").value = "";
+
+    $("in-name").value = p.name;
+    $("in-rollNumber").value = p.rollNumber;
+    $("in-department").value = p.department;
+    $("in-year").value = String(p.year);
+    $("in-skills").value = p.skills.join(", ");
+    $("in-github").value = p.github;
+    $("in-linkedin").value = p.linkedin;
+    $("in-instagram").value = p.instagram;
+    $("in-photo").value = "";
+    pendingPhoto = p.photo;
+    $("photoStatus").textContent = pendingPhoto ? "A photo is set." : "No photo set. Initials are shown instead.";
+
+    dialog.showModal();
+    (profile ? $("in-name") : $("in-username")).focus();
+  }
+
+  // Shrink the chosen image so many profiles fit in browser storage
+  function resizeImage(file, maxSize) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("Could not read the file"));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error("That file is not a valid image"));
+        img.onload = () => {
+          const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/jpeg", 0.8));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  $("in-photo").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      $("photoStatus").textContent = "Please choose an image file.";
+      e.target.value = "";
+      return;
+    }
+    try {
+      pendingPhoto = await resizeImage(file, 320);
+      $("photoStatus").textContent = "New photo selected. Save profile to apply it.";
+    } catch (err) {
+      $("photoStatus").textContent = err.message;
+    }
+  });
+
+  $("removePhoto").addEventListener("click", () => {
+    pendingPhoto = "";
+    $("in-photo").value = "";
+    $("photoStatus").textContent = "Photo will be removed when you save.";
+  });
+
+  // Turns "github.com/me" into "https://github.com/me" and rejects anything that isn't a web link
+  function cleanUrl(value) {
+    const v = value.trim();
+    if (!v) return { ok: true, url: "" };
+    const withScheme = /^https?:\/\//i.test(v) ? v : "https://" + v;
+    try {
+      const u = new URL(withScheme);
+      if (!u.hostname.includes(".")) return { ok: false };
+      return { ok: true, url: u.href };
+    } catch (err) {
+      return { ok: false };
+    }
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    clearErrors();
+    let valid = true;
+
+    // Username (only when creating)
+    let username = "";
+    if (!editingId) {
+      username = $("in-username").value.trim().toLowerCase();
+      if (!USERNAME_RE.test(username)) {
+        setError("username", "Use the year (2023 to 2026), a 2-letter department code and 4 digits.");
+        valid = false;
+      } else if (profiles.some((p) => p.username === username)) {
+        setError("username", "This username already has a profile. Log in instead.");
+        valid = false;
+      }
+    }
+
+    const name = $("in-name").value.trim();
+    if (name.length < 2) { setError("name", "Enter the name (at least 2 characters)."); valid = false; }
+
+    const rollNumber = $("in-rollNumber").value.trim();
+    if (!/^\d{13}$/.test(rollNumber)) {
+      setError("rollNumber", "Roll number must be exactly 13 digits.");
+      valid = false;
+    } else if (profiles.some((p) => p.rollNumber === rollNumber && p.id !== editingId)) {
+      setError("rollNumber", "A profile with this roll number already exists.");
+      valid = false;
+    }
+
+    const department = $("in-department").value;
+    if (!DEPARTMENTS.includes(department)) { setError("department", "Choose a department."); valid = false; }
+
+    const year = Number($("in-year").value);
+    if (![1, 2, 3, 4].includes(year)) { setError("year", "Choose a year."); valid = false; }
+
+    // Skills: split on commas, remove blanks and repeats
+    const skills = [];
+    $("in-skills").value.split(",").forEach((s) => {
+      const t = s.trim();
+      if (t && !skills.some((x) => x.toLowerCase() === t.toLowerCase())) skills.push(t);
+    });
+    if (skills.length > 10) { setError("skills", "Add at most 10 skills."); valid = false; }
+    else if (skills.some((s) => s.length > 20)) { setError("skills", "Each skill must be 20 characters or fewer."); valid = false; }
+
+    const links = {};
+    ["github", "linkedin", "instagram"].forEach((key) => {
+      const result = cleanUrl($("in-" + key).value);
+      if (!result.ok) { setError(key, "Enter a valid web link, like https://example.com/you"); valid = false; }
+      else links[key] = result.url;
+    });
+
+    if (!valid) {
+      const firstBad = form.querySelector(".field.invalid input, .field.invalid select");
+      if (firstBad) firstBad.focus();
+      return;
+    }
+
+    const data = { name, rollNumber, department, year, skills, photo: pendingPhoto, ...links };
+    const backup = JSON.stringify({ profiles, loggedInId }); // so we can undo if saving fails
+    let savedId;
+
+    if (editingId) {
+      const existing = profiles.find((p) => p.id === editingId);
+      profiles = profiles.map((p) => (p.id === editingId ? { ...data, id: editingId, username: existing.username } : p));
+      savedId = editingId;
+    } else {
+      savedId = newId();
+      profiles.push({ ...data, id: savedId, username });
+    }
+
+    if (!persist()) {
+      const b = JSON.parse(backup);
+      profiles = b.profiles;
+      loggedInId = b.loggedInId;
+      return;
+    }
+
+    dialog.close();
+    if (editingId) {
+      render();
+      $("editBtn").focus();
+    } else {
+      logIn(savedId); // new profile: log straight in
+    }
+  });
+
+  // ---------------------------------------------------------------
+  // 5. Buttons
+  // ---------------------------------------------------------------
+  $("createBtn").addEventListener("click", () => openEditor(null));
+  $("editBtn").addEventListener("click", () => openEditor(currentProfile()));
+  $("cancelBtn").addEventListener("click", () => dialog.close());
+
+  $("deleteBtn").addEventListener("click", () => {
+    const p = currentProfile();
+    if (!p) return;
+    if (!confirm("Delete your profile? This can't be undone.")) return;
+
+    profiles = profiles.filter((x) => x.id !== p.id);
+    persist();
+    logOut();
+  });
+
+  render();
+</script>
+</body>
+</html>

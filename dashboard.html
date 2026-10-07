@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Karla:wght@400;600&family=Sora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  /* ===== CUSTOMIZE HERE: change these values to restyle the whole page ===== */
+  :root {
+    --paper: #eceff2;     /* page background */
+    --ink: #14181c;       /* text, borders, shadows */
+    --muted: #58636d;     /* secondary text */
+    --card: #ffffff;      /* panels and table background */
+    --line: #d3d9de;      /* light dividers */
+    --accent: #3f5870;    /* bars, focus ring (a calm slate blue) */
+    --error: #b3261e;
+    --heading-font: Sora, system-ui, sans-serif;
+    --body-font: Karla, system-ui, sans-serif;
+  }
+  /* ======================================================================== */
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 24px;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body-font);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .page { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+  header { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+  h1 { margin: 0; font-family: var(--heading-font); font-size: 28px; letter-spacing: -0.01em; }
+  h2 { margin: 0 0 10px; font-size: 16px; font-weight: 600; color: var(--muted); }
+
+  .panel {
+    background: var(--card);
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+    box-shadow: 6px 6px 0 var(--ink);
+  }
+
+  button {
+    font: inherit;
+    font-weight: 600;
+    padding: 8px 18px;
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    background: var(--ink);
+    color: #fff;
+    cursor: pointer;
+  }
+  button.secondary { background: var(--card); color: var(--ink); }
+  button.small { padding: 3px 10px; font-size: 14px; }
+  button.danger { color: var(--error); border-color: var(--error); background: var(--card); }
+  button:hover { opacity: 0.88; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .banner {
+    padding: 12px 16px;
+    border: 1.5px solid var(--error);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--error);
+    font-weight: 600;
+  }
+
+  /* ---------- Stats ---------- */
+  .stats { display: grid; grid-template-columns: 150px 150px 1fr; gap: 20px; }
+  .stat { padding: 16px 18px; }
+  .stat-num { display: block; font-family: var(--heading-font); font-size: 40px; font-weight: 700; line-height: 1.1; }
+  .stat-label { color: var(--muted); }
+  .bars { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .bars li { display: grid; grid-template-columns: minmax(50px, 150px) 1fr 24px; gap: 10px; align-items: center; }
+  .track { height: 10px; background: var(--line); border-radius: 2px; overflow: hidden; display: block; }
+  .fill { display: block; height: 100%; background: var(--accent); }
+  .count { text-align: right; font-weight: 600; }
+  .muted { color: var(--muted); }
+
+  /* ---------- Filters ---------- */
+  .filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  input[type="text"], select {
+    font: inherit;
+    padding: 8px 10px;
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    background: #fff;
+    color: var(--ink);
+  }
+  .filters input[type="text"] { flex: 1 1 220px; }
+  .result-count { color: var(--muted); }
+
+  /* ---------- Table ---------- */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 680px; }
+  th, td { padding: 10px 14px; text-align: left; }
+  th { border-bottom: 1.5px solid var(--ink); font-weight: 600; color: var(--muted); white-space: nowrap; }
+  td { border-bottom: 1px solid var(--line); }
+  tr:last-child td { border-bottom: 0; }
+  td.actions { white-space: nowrap; display: flex; gap: 8px; }
+  td.name { font-weight: 600; }
+  .empty { padding: 28px 14px; text-align: center; color: var(--muted); }
+
+  /* ---------- Add/Edit dialog ---------- */
+  dialog {
+    width: min(460px, calc(100vw - 32px));
+    padding: 24px;
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+    box-shadow: 8px 8px 0 var(--ink);
+    color: var(--ink);
+    background: var(--card);
+  }
+  dialog::backdrop { background: rgba(20, 24, 28, 0.55); }
+  dialog h2 { font-family: var(--heading-font); font-size: 20px; color: var(--ink); margin-bottom: 16px; }
+  .field { margin-bottom: 14px; }
+  label { display: block; font-weight: 600; margin-bottom: 4px; }
+  dialog input[type="text"], dialog select { width: 100%; }
+  .hint { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
+  .error { margin: 4px 0 0; font-size: 14px; color: var(--error); }
+  .field.invalid input, .field.invalid select { border-color: var(--error); }
+  .dialog-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  @media (max-width: 700px) {
+    body { padding: 16px; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .stats .stat:last-child { grid-column: 1 / -1; }
+    .panel { box-shadow: 4px 4px 0 var(--ink); }
+    h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header>
+    <h1>Student records</h1>
+    <button type="button" id="addBtn">Add student</button>
+  </header>
+
+  <div class="banner" id="banner" role="alert" hidden></div>
+
+  <section class="stats" aria-label="Summary">
+    <div class="panel stat"><span class="stat-num" id="statTotal">0</span><span class="stat-label">Students</span></div>
+    <div class="panel stat"><span class="stat-num" id="statDepts">0</span><span class="stat-label">Departments</span></div>
+    <div class="panel stat">
+      <h2>Students by department</h2>
+      <ul class="bars" id="deptBars"></ul>
+    </div>
+  </section>
+
+  <section class="filters" aria-label="Search and filters">
+    <input type="text" id="search" placeholder="Search by name, roll number or username" aria-label="Search students">
+    <select id="filterDept" aria-label="Filter by department"></select>
+    <select id="filterYear" aria-label="Filter by year">
+      <option value="">All years</option>
+      <option value="1">Year 1</option>
+      <option value="2">Year 2</option>
+      <option value="3">Year 3</option>
+      <option value="4">Year 4</option>
+    </select>
+    <span class="result-count" id="resultCount"></span>
+  </section>
+
+  <section class="panel table-wrap" aria-label="Student list">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Roll number</th>
+          <th>Username</th>
+          <th>Department</th>
+          <th>Year</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p class="empty" id="emptyMsg" hidden></p>
+  </section>
+</div>
+
+<dialog id="formDialog" aria-labelledby="dialogTitle">
+  <h2 id="dialogTitle">Add student</h2>
+  <form id="studentForm" novalidate>
+    <div class="field" id="f-name">
+      <label for="in-name">Name</label>
+      <input type="text" id="in-name" maxlength="100">
+      <p class="error" id="e-name"></p>
+    </div>
+    <div class="field" id="f-roll_number">
+      <label for="in-roll_number">Roll number</label>
+      <input type="text" id="in-roll_number" inputmode="numeric" maxlength="13" placeholder="212725050xxxx">
+      <p class="hint">13 digits</p>
+      <p class="error" id="e-roll_number"></p>
+    </div>
+    <div class="field" id="f-username">
+      <label for="in-username">Username</label>
+      <input type="text" id="in-username" maxlength="10" placeholder="2025csxxxx">
+      <p class="hint">Year (2023 to 2026), 2-letter department code, 4 digits</p>
+      <p class="error" id="e-username"></p>
+    </div>
+    <div class="field" id="f-department">
+      <label for="in-department">Department</label>
+      <input type="text" id="in-department" maxlength="100" placeholder="CSE">
+      <p class="error" id="e-department"></p>
+    </div>
+    <div class="field" id="f-year">
+      <label for="in-year">Year</label>
+      <select id="in-year">
+        <option value="1">1st year</option>
+        <option value="2">2nd year</option>
+        <option value="3">3rd year</option>
+        <option value="4">4th year</option>
+      </select>
+      <p class="error" id="e-year"></p>
+    </div>
+    <p class="error" id="formError"></p>
+    <div class="dialog-actions">
+      <button type="button" class="secondary" id="cancelBtn">Cancel</button>
+      <button type="submit" id="saveBtn">Save student</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+  // The address of your Flask API. Change it if you run the API somewhere else.
+  const API = "http://127.0.0.1:5001";
+
+  const $ = (id) => document.getElementById(id);
+  const fields = ["name", "roll_number", "username", "department", "year"];
+
+  let students = [];      // everything we got from the API
+  let editingId = null;   // null = adding a new student, a number = editing that student
+
+  // Small helper: make an element with text (textContent keeps it safe from HTML injection)
+  function el(tag, text, className) {
+    const node = document.createElement(tag);
+    if (text !== undefined) node.textContent = text;
+    if (className) node.className = className;
+    return node;
+  }
+
+  // ---------------------------------------------------------------
+  // 1. Get the data from the API
+  // ---------------------------------------------------------------
+  async function loadStudents() {
+    try {
+      const res = await fetch(API + "/students");
+      if (!res.ok) throw new Error("Server replied with " + res.status);
+      students = await res.json();
+      $("banner").hidden = true;
+    } catch (err) {
+      students = [];
+      $("banner").hidden = false;
+      $("banner").textContent = "Can't reach the API. Open a terminal in the backend folder and run: python app.py";
+    }
+    render();
+  }
+
+  // ---------------------------------------------------------------
+  // 2. Draw the page
+  // ---------------------------------------------------------------
+  function render() {
+    renderStats();
+    renderDeptFilter();
+    renderTable();
+  }
+
+  function renderStats() {
+    $("statTotal").textContent = students.length;
+
+    const counts = {};
+    students.forEach((s) => { counts[s.department] = (counts[s.department] || 0) + 1; });
+    const depts = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    $("statDepts").textContent = depts.length;
+
+    const list = $("deptBars");
+    list.replaceChildren();
+    if (!depts.length) {
+      list.append(el("li", "No students yet", "muted"));
+      return;
+    }
+    const max = depts[0][1];
+    depts.forEach(([name, count]) => {
+      const li = el("li");
+      const track = el("span", undefined, "track");
+      const fill = el("span", undefined, "fill");
+      fill.style.width = (count / max) * 100 + "%";
+      track.append(fill);
+      li.append(el("span", name), track, el("span", String(count), "count"));
+      list.append(li);
+    });
+  }
+
+  function renderDeptFilter() {
+    const select = $("filterDept");
+    const current = select.value;
+    select.replaceChildren(new Option("All departments", ""));
+    [...new Set(students.map((s) => s.department))].sort().forEach((d) => select.append(new Option(d, d)));
+    select.value = [...select.options].some((o) => o.value === current) ? current : "";
+  }
+
+  function visibleStudents() {
+    const q = $("search").value.trim().toLowerCase();
+    const dept = $("filterDept").value;
+    const year = $("filterYear").value;
+    return students.filter((s) =>
+      (!dept || s.department === dept) &&
+      (!year || String(s.year) === year) &&
+      (!q || [s.name, s.roll_number, s.username].some((v) => v.toLowerCase().includes(q)))
+    );
+  }
+
+  function renderTable() {
+    const rows = $("rows");
+    rows.replaceChildren();
+    const list = visibleStudents();
+
+    $("resultCount").textContent = students.length ? "Showing " + list.length + " of " + students.length : "";
+
+    const empty = $("emptyMsg");
+    if (!list.length) {
+      empty.hidden = false;
+      empty.textContent = students.length
+        ? "No students match your search or filters."
+        : "No students yet. Click Add student to create the first one.";
+    } else {
+      empty.hidden = true;
+    }
+
+    list.forEach((s) => {
+      const tr = el("tr");
+      tr.append(el("td", s.name, "name"), el("td", s.roll_number), el("td", s.username), el("td", s.department), el("td", "Year " + s.year));
+
+      const actions = el("td", undefined, "actions");
+      const editBtn = el("button", "Edit", "secondary small");
+      editBtn.type = "button";
+      editBtn.setAttribute("aria-label", "Edit " + s.name);
+      editBtn.addEventListener("click", () => openForm(s));
+      const delBtn = el("button", "Delete", "danger small");
+      delBtn.type = "button";
+      delBtn.setAttribute("aria-label", "Delete " + s.name);
+      delBtn.addEventListener("click", () => deleteStudent(s));
+      actions.append(editBtn, delBtn);
+      tr.append(actions);
+
+      rows.append(tr);
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // 3. Add and edit (the form)
+  // ---------------------------------------------------------------
+  const dialog = $("formDialog");
+  const form = $("studentForm");
+
+  function clearErrors() {
+    fields.forEach((f) => {
+      $("e-" + f).textContent = "";
+      $("f-" + f).classList.remove("invalid");
+    });
+    $("formError").textContent = "";
+  }
+
+  function setError(field, message) {
+    $("e-" + field).textContent = message;
+    $("f-" + field).classList.add("invalid");
+  }
+
+  function openForm(student) {
+    clearErrors();
+    editingId = student ? student.id : null;
+    $("dialogTitle").textContent = student ? "Edit student" : "Add student";
+    fields.forEach((f) => { $("in-" + f).value = student ? student[f] : (f === "year" ? "1" : ""); });
+    dialog.showModal();
+    $("in-name").focus();
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearErrors();
+
+    const body = {
+      name: $("in-name").value.trim(),
+      roll_number: $("in-roll_number").value.trim(),
+      username: $("in-username").value.trim(),
+      department: $("in-department").value.trim(),
+      year: Number($("in-year").value)
+    };
+
+    const url = editingId ? API + "/students/" + editingId : API + "/students";
+    const method = editingId ? "PUT" : "POST";
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        // The API does the real validation. We just show what it says.
+        if (data.details) {
+          Object.entries(data.details).forEach(([key, message]) => {
+            if (fields.includes(key)) setError(key, message);
+            else $("formError").textContent = message;
+          });
+        } else {
+          $("formError").textContent = data.error || "Something went wrong.";
+        }
+        return;
+      }
+
+      dialog.close();
+      loadStudents();
+    } catch (err) {
+      $("formError").textContent = "Can't reach the API. Is python app.py running?";
+    }
+  });
+
+  async function deleteStudent(s) {
+    if (!confirm("Delete " + s.name + " (" + s.roll_number + ")?")) return;
+    try {
+      const res = await fetch(API + "/students/" + s.id, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || "Could not delete this student.");
+      }
+    } catch (err) {
+      alert("Can't reach the API. Is python app.py running?");
+    }
+    loadStudents();
+  }
+
+  // ---------------------------------------------------------------
+  // 4. Wire up the buttons and filters
+  // ---------------------------------------------------------------
+  $("addBtn").addEventListener("click", () => openForm(null));
+  $("cancelBtn").addEventListener("click", () => dialog.close());
+  $("search").addEventListener("input", renderTable);
+  $("filterDept").addEventListener("change", renderTable);
+  $("filterYear").addEventListener("change", renderTable);
+
+  loadStudents();
+</script>
+</body>
+</html>
