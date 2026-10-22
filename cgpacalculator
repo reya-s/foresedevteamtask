@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ===== CUSTOMIZE HERE: colours and fonts ===== */
+  :root {
+    --bg: #fff3d6;
+    --ink: #1b1b2f;
+    --muted: #5d5a73;
+    --card: #ffffff;
+    --pink: #ff8fb1;
+    --mint: #7be6bd;
+    --sky: #85c8ff;
+    --lilac: #bba3ff;
+    --lemon: #ffd84d;
+    --heading-font: Fredoka, "Trebuchet MS", system-ui, sans-serif;
+    --body-font: Nunito, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 28px 20px 48px;
+    background: var(--bg);
+    background-image: radial-gradient(#f3d98e 1.5px, transparent 1.5px);
+    background-size: 22px 22px;
+    color: var(--ink);
+    font-family: var(--body-font);
+    line-height: 1.5;
+  }
+  .page { max-width: 880px; margin: 0 auto; }
+  h1, h2, .big, .stamp, .label { font-family: var(--heading-font); }
+  header h1 { margin: 0; font-size: 44px; line-height: 1.1; letter-spacing: -0.01em; }
+  header h1 span { background: var(--pink); padding: 0 10px; border: 3px solid var(--ink); border-radius: 12px; display: inline-block; transform: rotate(-2deg); box-shadow: 4px 4px 0 var(--ink); }
+  .sub { margin: 10px 0 20px; color: var(--muted); font-weight: 600; }
+
+  button { font: inherit; cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+  .sems { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px; }
+  .sems button {
+    padding: 6px 16px;
+    border: 3px solid var(--ink);
+    border-radius: 999px;
+    background: var(--card);
+    color: var(--ink);
+    font-family: var(--heading-font);
+    font-weight: 600;
+    box-shadow: 3px 3px 0 var(--ink);
+    transition: transform .12s;
+  }
+  .sems button:hover { transform: translateY(-2px); }
+  .sems button[aria-pressed="true"] { background: var(--lemon); transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+
+  .results { display: grid; grid-template-columns: 1fr 1.4fr; gap: 18px; margin-bottom: 26px; }
+  .stat { border: 3px solid var(--ink); border-radius: 18px; box-shadow: 6px 6px 0 var(--ink); padding: 16px 20px; }
+  .stat.sem { background: var(--sky); }
+  .stat.cg { background: var(--mint); display: flex; align-items: center; gap: 18px; }
+  .label { font-weight: 600; font-size: 17px; }
+  .big { font-size: 52px; font-weight: 700; line-height: 1.05; }
+  .small { font-size: 14px; font-weight: 600; }
+  .vibe { margin-top: 6px; font-weight: 700; }
+  .ring {
+    --pct: 0%;
+    flex: none;
+    width: 118px; height: 118px;
+    border-radius: 50%;
+    border: 3px solid var(--ink);
+    background: conic-gradient(var(--ink) var(--pct), #ffffff88 0);
+    display: grid; place-items: center;
+    transition: background .4s;
+  }
+  .ringIn { width: 88px; height: 88px; border-radius: 50%; background: var(--card); border: 3px solid var(--ink); display: grid; place-items: center; }
+  .ringIn .big { font-size: 28px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+  .subject { background: var(--card); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 6px 6px 0 var(--ink); padding: 14px 16px 14px; border-top-width: 14px; }
+  .subject.theory { border-top-color: var(--pink); }
+  .subject.lab { border-top-color: var(--mint); }
+  .subject.direct { border-top-color: var(--lilac); }
+  .top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+  .subject h2 { margin: 0; font-size: 18px; line-height: 1.25; font-weight: 600; }
+  .meta { margin: 2px 0 10px; font-size: 13px; font-weight: 700; color: var(--muted); }
+  .stamp {
+    flex: none;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    border: 3px solid var(--ink);
+    display: grid; place-items: center;
+    background: #eeeaf7;
+    font-size: 20px; font-weight: 700;
+  }
+  .stamp[data-grade="O"] { background: var(--lemon); }
+  .stamp[data-grade="A+"] { background: var(--mint); }
+  .stamp[data-grade="A"] { background: var(--sky); }
+  .stamp[data-grade="B+"] { background: var(--lilac); }
+  .stamp[data-grade="B"] { background: var(--pink); }
+  .stamp[data-grade="C"] { background: #ffb27a; }
+  .stamp[data-grade="U"] { background: #ff6b6b; }
+  .stamp.pop { animation: pop .35s ease; }
+  @keyframes pop { 0% { transform: scale(.6) rotate(-12deg); } 70% { transform: scale(1.15) rotate(4deg); } 100% { transform: scale(1); } }
+  @media (prefers-reduced-motion: reduce) { .stamp.pop { animation: none; } .ring, .sems button { transition: none; } }
+
+  .fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; margin-bottom: 10px; }
+  .fields label { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .fields input, .pick select {
+    width: 100%; padding: 6px 8px;
+    border: 2px solid var(--ink); border-radius: 10px;
+    background: #fffdf5; color: var(--ink); font: inherit; font-weight: 700;
+  }
+  .pick { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--muted); }
+  .pick select { width: 96px; }
+  .line { margin-top: 8px; font-weight: 700; font-size: 14px; }
+
+  .clear {
+    margin-top: 26px; padding: 8px 18px;
+    border: 3px solid var(--ink); border-radius: 999px;
+    background: var(--card); color: var(--ink); font-family: var(--heading-font); font-weight: 600;
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+  .rules { margin-top: 20px; font-size: 14px; font-weight: 600; color: var(--muted); }
+  .note { font-size: 13px; color: var(--muted); font-weight: 600; }
+
+  @media (max-width: 640px) {
+    body { padding: 20px 14px 40px; }
+    header h1 { font-size: 34px; }
+    .results { grid-template-columns: 1fr; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<main class="page">
+  <header>
+    <h1><span>Grade</span> Quest</h1>
+    <p class="sub">B.E. CSE, Regulations 2022. Add your marks and watch the grades pop.</p>
+  </header>
+
+  <div class="sems" id="sems" role="group" aria-label="Choose a semester"></div>
+
+  <section class="results" id="results" aria-live="polite">
+    <div class="stat sem">
+      <div class="label" id="semLabel"></div>
+      <div class="big" id="semGpa">-</div>
+      <div class="small" id="semCredits"></div>
+    </div>
+    <div class="stat cg">
+      <div class="ring" id="ring"><div class="ringIn"><div class="big" id="cgpa">-</div></div></div>
+      <div>
+        <div class="label">CGPA so far</div>
+        <div class="small" id="cgpaCredits"></div>
+        <div class="vibe" id="vibe"></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="subjects" class="grid"></div>
+
+  <button type="button" class="clear" id="clearBtn">Clear this semester</button>
+
+  <details class="rules"><summary>Rules used (check these against your rule sheet)</summary><ul id="rulesList"></ul></details>
+  <p class="note">Everything is saved in this browser. Subjects with no grade or marks are left out of the maths.</p>
+</main>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  // ---------------------------------------------------------------
+  // 1. Data
+  // ---------------------------------------------------------------
+
+  // Grade points. The syllabus PDF doesn't list the grading scale, so CHECK this
+  // against your college's scale and edit it if it's different.
+  const GRADE_POINTS = { "O": 10, "A+": 9, "A": 8, "B+": 7, "B": 6, "C": 5, "U": 0 };
+
+  const ROMAN = { 1: "I", 2: "II", 3: "III", 4: "IV", 5: "V", 6: "VI", 7: "VII", 8: "VIII" };
+
+  // [subject name, credits] for each semester, from the R22 B.E. CSE curriculum.
+  // Zero-credit items (Induction Programme, Mandatory Course) are left out.
+  const SEMESTERS = {
+    1: [
+      ["Tamil Language and Heritage of Ancient Tamil Society", 1],
+      ["Communicative English", 3],
+      ["Applied Mathematics I", 4],
+      ["Applied Physics", 3],
+      ["Applied Chemistry", 3],
+      ["Basic Electrical and Electronics Engineering", 3],
+      ["Programming for Problem Solving", 3],
+      ["Physics Laboratory", 1],
+      ["Basic Electrical and Electronics Engineering Laboratory", 1],
+      ["Programming for Problem Solving Laboratory", 1.5]
+    ],
+    2: [
+      ["Science and Technology in Ancient Tamil Society", 2],
+      ["Technical English", 3],
+      ["Applied Mathematics II", 4],
+      ["Technical Drawing", 2],
+      ["Python for Data Science", 4],
+      ["Digital Principles and System Design", 3],
+      ["Object Oriented Programming", 3],
+      ["Digital Principles and System Design Laboratory", 1.5],
+      ["Object Oriented Programming Laboratory", 1.5]
+    ],
+    3: [
+      ["Discrete Mathematics", 4],
+      ["Artificial Intelligence", 3],
+      ["Database Management Systems", 3],
+      ["Data Mining and Data Warehousing", 3],
+      ["Data Structures", 3],
+      ["Microprocessor and Computer Architecture", 3],
+      ["Database Management Systems Laboratory", 1.5],
+      ["Data Structures Laboratory", 1.5],
+      ["Microprocessor Laboratory", 1.5]
+    ],
+    4: [
+      ["Probability and Queuing Theory", 4],
+      ["Operating Systems", 3],
+      ["Machine Learning Techniques", 3],
+      ["Design and Analysis of Algorithms", 3],
+      ["Java Programming: Theory and Practices", 4],
+      ["Environmental Sciences and Sustainability", 3],
+      ["Operating Systems Laboratory", 1.5],
+      ["Artificial Intelligence and Machine Learning Laboratory", 1.5]
+    ],
+    5: [
+      ["Computer Networks", 3],
+      ["Software Engineering", 3],
+      ["User Interface Tools and Techniques", 3],
+      ["Theory of Computation", 3],
+      ["Professional Elective I", 3],
+      ["Open Elective I", 3],
+      ["Computer Networks Laboratory", 1.5],
+      ["User Interface Tools and Techniques Laboratory", 1.5],
+      ["Interview and Career Skills Laboratory", 2]
+    ],
+    6: [
+      ["Cryptography and Network Security", 3],
+      ["Software Project Management", 3],
+      ["Internet of Things and Applications", 3],
+      ["Cloud Computing", 3],
+      ["Compiler Design", 3],
+      ["Professional Elective II", 3],
+      ["Open Elective II", 3],
+      ["Cryptography and Network Security Laboratory", 1.5],
+      ["Cloud Computing Laboratory", 1.5],
+      ["Internship", 2]
+    ],
+    7: [
+      ["Ethics for Computer Professionals", 3],
+      ["Professional Elective III", 3],
+      ["Professional Elective IV", 3],
+      ["Professional Elective V", 3],
+      ["Professional Elective VI", 3]
+    ],
+    8: [
+      ["Project Work", 10]
+    ]
+  };
+
+  // ---------------------------------------------------------------
+  // 2. Saved grades, e.g. { "3-0": "O", "3-1": "A" }
+  //    The key is "semester-subjectNumber"
+  // ---------------------------------------------------------------
+  const STORAGE_KEY = "gpaGrades";
+
+  function loadGrades() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      return saved && typeof saved === "object" ? saved : {};
+    } catch (err) {
+      return {};
+    }
+  }
+
+  function saveGrades() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(grades)); } catch (err) { /* ignore */ }
+  }
+
+  let grades = loadGrades();
+  let currentSem = 3; // opens on Semester III
+
+  // ---------------------------------------------------------------
+  // 3. Rules. CHECK these against your college's rule sheet and edit.
+  // ---------------------------------------------------------------
+  const RULES = {
+    theoryInternalWeight: 0.4,  // theory: 40% internal average + 60% semester exam
+    labInternalWeight: 0.6,     // labs: 60% internal + 40% external
+    minExternalPercent: 0,      // minimum needed in the semester/external exam (e.g. 45), 0 = none
+    roundTotal: true            // round the final total to a whole number before finding the grade
+  };
+  // Total marks needed for each grade (a guess, please verify). Below the last one is U.
+  const CUTOFFS = [["O", 91], ["A+", 81], ["A", 71], ["B+", 61], ["B", 50]];
+
+  // Evaluated differently (mixed theory+lab, internship, project): pick the grade directly
+  const DIRECT_ONLY = ["Technical Drawing", "Python for Data Science", "Java Programming: Theory and Practices",
+                       "Interview and Career Skills Laboratory", "Internship", "Project Work"];
+  function kindOf(name) {
+    if (DIRECT_ONLY.includes(name)) return "direct";
+    return name.includes("Laboratory") ? "lab" : "theory";
+  }
+
+  const MARKS_KEY = "gpaMarks";
+  function loadMarks() {
+    try { return JSON.parse(localStorage.getItem(MARKS_KEY)) || {}; } catch (err) { return {}; }
+  }
+  function saveMarks() {
+    try { localStorage.setItem(MARKS_KEY, JSON.stringify(marks)); } catch (err) { /* ignore */ }
+  }
+  let marks = loadMarks();               // e.g. { "3-0": { f1: "40", a1: "45", sem: "80" } }
+  const assignmentMax = 50;             // every assignment is out of 50
+
+  const filled = (m, fields) => fields.every((f) => m[f] !== undefined && m[f] !== "" && !isNaN(Number(m[f])));
+
+  // Total marks for one subject, or null if marks are missing or out of range
+  function computeTotal(kind, m) {
+    if (kind === "theory") {
+      if (!filled(m, ["f1", "f2", "f3", "a1", "a2", "a3", "sem"])) return null;
+      const fats = [m.f1, m.f2, m.f3].map(Number), asg = [m.a1, m.a2, m.a3].map(Number), sem = Number(m.sem);
+      if (fats.some((x) => x < 0 || x > 50) || asg.some((x) => x < 0 || x > assignmentMax) || sem < 0 || sem > 100) return null;
+      const internal = ([...fats, ...asg].reduce((x, y) => x + y, 0) / (150 + 3 * assignmentMax)) * 100;
+      const w = RULES.theoryInternalWeight;
+      return { total: internal * w + sem * (1 - w), external: sem };
+    }
+    if (!filled(m, ["internal", "external"])) return null;
+    const i = Number(m.internal), e = Number(m.external);
+    if (i < 0 || i > 100 || e < 0 || e > 100) return null;
+    const w = RULES.labInternalWeight;
+    return { total: i * w + e * (1 - w), external: e };
+  }
+
+  function gradeFromTotal(r) {
+    if (r.external < RULES.minExternalPercent) return "U";
+    const t = RULES.roundTotal ? Math.round(r.total) : r.total;
+    for (const [grade, min] of CUTOFFS) if (t >= min) return grade;
+    return "U";
+  }
+
+  // The grade used for the GPA: worked out from marks if all are entered, otherwise the dropdown
+  function gradeFor(sem, index) {
+    const key = sem + "-" + index;
+    const kind = kindOf(SEMESTERS[sem][index][0]);
+    if (kind !== "direct") {
+      const r = computeTotal(kind, marks[key] || {});
+      if (r) return gradeFromTotal(r);
+    }
+    return grades[key] || "";
+  }
+
+  // ---------------------------------------------------------------
+  // 4. GPA = (sum of credits x grade point) / (sum of credits)
+  //    Only subjects that have a grade are counted.
+  // ---------------------------------------------------------------
+  function calculateGpa(semesterNumbers) {
+    let totalPoints = 0, totalCredits = 0;
+    semesterNumbers.forEach((sem) => {
+      SEMESTERS[sem].forEach(([name, credits], index) => {
+        const grade = gradeFor(sem, index);
+        if (!grade) return;
+        totalCredits += credits;
+        totalPoints += credits * GRADE_POINTS[grade];
+      });
+    });
+    return { gpa: totalCredits > 0 ? totalPoints / totalCredits : null, totalCredits };
+  }
+
+  // ---------------------------------------------------------------
+  // 5. Drawing the page
+  // ---------------------------------------------------------------
+  function renderSemesterButtons() {
+    const box = $("sems");
+    box.replaceChildren();
+    Object.keys(SEMESTERS).forEach((key) => {
+      const sem = Number(key);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = "Sem " + ROMAN[sem];
+      btn.setAttribute("aria-pressed", String(sem === currentSem));
+      btn.addEventListener("click", () => { currentSem = sem; renderSemesterButtons(); renderRows(); renderResults(); });
+      box.append(btn);
+    });
+  }
+
+  function describe(sem, index) {
+    const key = sem + "-" + index;
+    const kind = kindOf(SEMESTERS[sem][index][0]);
+    if (kind !== "direct") {
+      const r = computeTotal(kind, marks[key] || {});
+      if (r) return "Total " + r.total.toFixed(1) + " out of 100, grade " + gradeFromTotal(r);
+    }
+    if (grades[key]) return "Grade " + grades[key] + " (picked)";
+    return kind === "direct" ? "Pick a grade" : "Enter all the marks, or pick a grade";
+  }
+
+  function renderRows() {
+    const box = $("subjects");
+    box.replaceChildren();
+    SEMESTERS[currentSem].forEach(([name, credits], index) => {
+      const key = currentSem + "-" + index;
+      const kind = kindOf(name);
+      const card = document.createElement("div");
+      card.className = "subject " + kind;
+
+      const top = document.createElement("div");
+      top.className = "top";
+      const title = document.createElement("h2");
+      title.textContent = name;
+      const stamp = document.createElement("div");
+      stamp.className = "stamp";
+      top.append(title, stamp);
+      const meta = document.createElement("p");
+      meta.className = "meta";
+      meta.textContent = credits + " credits";
+      card.append(top, meta);
+
+      const line = document.createElement("div");
+      line.className = "line";
+      let lastGrade = null;
+      const refresh = () => {
+        const g = gradeFor(currentSem, index);
+        stamp.textContent = g || "?";
+        stamp.dataset.grade = g;
+        if (lastGrade !== null && g !== lastGrade) { stamp.classList.remove("pop"); void stamp.offsetWidth; stamp.classList.add("pop"); }
+        lastGrade = g;
+        line.textContent = describe(currentSem, index);
+      };
+
+      if (kind !== "direct") {
+        const fields = kind === "theory"
+          ? [["FAT 1 /50", "f1", 50], ["FAT 2 /50", "f2", 50], ["FAT 3 /50", "f3", 50],
+             ["Assign 1 /50", "a1", 50], ["Assign 2 /50", "a2", 50], ["Assign 3 /50", "a3", 50], ["Semester /100", "sem", 100]]
+          : [["Internal /100", "internal", 100], ["External /100", "external", 100]];
+        const grid = document.createElement("div");
+        grid.className = "fields";
+        fields.forEach(([label, field, max]) => {
+          const lab = document.createElement("label");
+          lab.textContent = label;
+          const input = document.createElement("input");
+          input.type = "number"; input.min = 0; input.max = max; input.step = "any";
+          input.value = (marks[key] || {})[field] ?? "";
+          input.addEventListener("input", () => {
+            marks[key] = { ...(marks[key] || {}), [field]: input.value };
+            saveMarks();
+            refresh();
+            renderResults();
+          });
+          lab.append(input);
+          grid.append(lab);
+        });
+        card.append(grid);
+      }
+
+      const pick = document.createElement("div");
+      pick.className = "pick";
+      pick.append(kind === "direct" ? "Grade" : "Or pick the grade");
+      const select = document.createElement("select");
+      select.setAttribute("aria-label", "Grade for " + name);
+      select.append(new Option("Grade", ""));
+      Object.keys(GRADE_POINTS).forEach((g) => select.append(new Option(g, g)));
+      select.value = grades[key] || "";
+      select.addEventListener("change", () => {
+        if (select.value) grades[key] = select.value; else delete grades[key];
+        saveGrades();
+        refresh();
+        renderResults();
+      });
+      pick.append(select);
+      card.append(pick, line);
+      refresh();
+      box.append(card);
+    });
+  }
+
+  function vibeFor(cgpa) {
+    if (cgpa === null) return "Add some marks to start the quest";
+    if (cgpa >= 9) return "Absolute legend";
+    if (cgpa >= 8) return "Looking sharp";
+    if (cgpa >= 7) return "Solid. Keep climbing";
+    if (cgpa >= 6) return "Room to level up";
+    return "Comeback arc loading";
+  }
+
+  function renderResults() {
+    const sem = calculateGpa([currentSem]);
+    $("semLabel").textContent = "Semester " + ROMAN[currentSem] + " GPA";
+    $("semGpa").textContent = sem.gpa === null ? "-" : sem.gpa.toFixed(2);
+    $("semCredits").textContent = sem.totalCredits ? sem.totalCredits + " credits counted" : "Add marks or grades";
+
+    const all = calculateGpa(Object.keys(SEMESTERS).map(Number));
+    const withGrades = Object.keys(SEMESTERS).filter((s) => SEMESTERS[s].some((_, i) => gradeFor(Number(s), i))).length;
+    $("cgpa").textContent = all.gpa === null ? "-" : all.gpa.toFixed(2);
+    $("ring").style.setProperty("--pct", all.gpa === null ? "0%" : (all.gpa / 10) * 100 + "%");
+    $("vibe").textContent = vibeFor(all.gpa);
+    $("cgpaCredits").textContent = all.totalCredits
+      ? all.totalCredits + " credits across " + withGrades + (withGrades === 1 ? " semester" : " semesters")
+      : "No grades entered yet";
+  }
+
+  function renderRulesList() {
+    const items = [
+      "Theory: " + RULES.theoryInternalWeight * 100 + "% internal average + " + (1 - RULES.theoryInternalWeight) * 100 + "% semester exam",
+      "Internal average: FAT and assignment marks counted equally (3 FATs /50, 3 assignments /" + assignmentMax + ")",
+      "Labs: " + RULES.labInternalWeight * 100 + "% internal + " + (1 - RULES.labInternalWeight) * 100 + "% external",
+      "Grade cutoffs on total marks: " + CUTOFFS.map(([g, m]) => g + " " + m + "+").join(", ") + ", below that U",
+      "Totals are rounded to a whole number. No minimum in the semester exam.",
+      "Marked 'Grade' only (pick directly): Technical Drawing, Python for Data Science, Java, Interview and Career Skills Lab, Internship, Project Work"
+    ];
+    $("rulesList").replaceChildren(...items.map((t) => { const li = document.createElement("li"); li.textContent = t; return li; }));
+  }
+
+  $("clearBtn").addEventListener("click", () => {
+    if (!confirm("Clear all marks and grades for Semester " + ROMAN[currentSem] + "?")) return;
+    SEMESTERS[currentSem].forEach((_, i) => { delete grades[currentSem + "-" + i]; delete marks[currentSem + "-" + i]; });
+    saveGrades(); saveMarks(); renderRows(); renderResults();
+  });
+
+  renderSemesterButtons();
+  renderRulesList();
+  renderRows();
+  renderResults();
+</script>
+</body>
+</html>
