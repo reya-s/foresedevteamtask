@@ -53,3 +53,30 @@ Dashboard (optional): start the API first, then open `dashboard.html`. It shows 
 ## Tech
 
 Python, Flask, SQLite, HTML, CSS, JavaScript.
+# Grade Quest: CGPA Calculator
+
+A simple web app to calculate semester GPA and CGPA for B.E. CSE (Regulations 2022), all 8 semesters.
+
+## Features
+
+- Pick a semester, then choose a grade for each subject or enter marks to get the grade
+- Live semester GPA and CGPA
+- Data is saved in your browser (localStorage)
+
+## Run
+
+Download `index.html` and open it in any browser. No installation needed.
+
+## How it works
+
+```
+GPA = (sum of credits x grade points) / (sum of credits)
+```
+
+Grade points: O = 10, A+ = 9, A = 8, B+ = 7, B = 6, C = 5, U = 0.
+
+> The grade points and cut-offs are not from an official source. Please check them against your college's rules. They are easy to change at the top of the script in `index.html`.
+
+## Built with
+
+HTML, CSS and JavaScript (no libraries).
